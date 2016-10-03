@@ -11,6 +11,11 @@ ASimpleAIController::ASimpleAIController()
 
 void ASimpleAIController::Tick(float DeltaSeconds)
 {
+	auto Orders = GetPizzaOrders();
+	
+	// Take first order.
+	auto HouseLocations = GetHouseLocations();
+
     if (bDeliveringOrder) {
         float Distance = GetDistanceToDestination(CurrentDestination);
         if (Distance > 300.f) {
@@ -24,28 +29,40 @@ void ASimpleAIController::Tick(float DeltaSeconds)
             bDeliveringOrder = false;
             CurrentOrderNumber = -1;
         } else {
-            SetNewMoveDestination(CurrentDestination);
+			//CrucialTimeDiffer = 10;
+			//for (int i = 0; i < Orders.Num(); ++i) {
+			//	TimeDiffer = GetHouseTimeLeft(Orders[i].HouseNumber) - GetDistanceToDestination(HouseLocations[Orders[i].HouseNumber]) / 600 - 1;
+			//	if (TimeDiffer < 0) {
+			//		CrucialTimeDiffer = TimeDiffer;
+			//		CurrentOrderNumber = Orders[i].OrderNumber;
+			//		CurrentDestination = HouseLocations[Orders[i].HouseNumber];
+			//		SetNewMoveDestination(CurrentDestination);
+			//		return;
+			//	}
+			//}
+			SetNewMoveDestination(CurrentDestination);
         }
         return;
     }
 
-    auto Orders = GetPizzaOrders();
-    if (Orders.Num() == 0) {
-        // No orders to serve.
-        return;
-    }
-
-    // Take first order.
-    auto HouseLocations = GetHouseLocations();
+	if (Orders.Num() == 0) {
+		// No orders to serve.
+		return;
+	}
 
     int closestOrder = 0;
-    float closestDistance = GetDistanceToDestination(HouseLocations[Orders[0].HouseNumber]);
+    float closestDistance = GetDistanceToDestination(HouseLocations[Orders[0].HouseNumber]) + GetHouseTimeLeft(Orders[0].HouseNumber) * 50;
     for (int i = 0; i < Orders.Num(); ++i) {
-        float currentDistance = GetDistanceToDestination(HouseLocations[Orders[i].HouseNumber]);
+        float currentDistance = GetDistanceToDestination(HouseLocations[Orders[i].HouseNumber]) + GetHouseTimeLeft(Orders[i].HouseNumber) * 50;
         if (currentDistance < closestDistance) {
             closestDistance = currentDistance;
             closestOrder = i;
+			//SetNewMoveDestination(HouseLocations[Orders[i].HouseNumber]);
         }
+		if (GetDistanceToDestination(HouseLocations[Orders[i].HouseNumber]) / 600 > GetHouseTimeLeft(Orders[i].HouseNumber) - 1.5) {
+			closestDistance = 0;
+			closestOrder = i;
+		}
     }
     auto Order = Orders[closestOrder];
 
